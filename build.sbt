@@ -2,11 +2,11 @@ import sbtcrossproject.{crossProject, CrossType}
 import OsgiKeys._
 
 val scala210 = "2.10.6"
-val scala211 = "2.11.11"
+val scala211 = "2.11.12"
 val scala212 = "2.12.2"
 val scala213 = "2.13.0-M1"
 val baseSettings = Seq(
-  organization := "com.lihaoyi",
+  organization := "com.github.xenoby",
   name := "sourcecode",
   version := "0.1.4",
   scalaVersion := scala211,
@@ -23,7 +23,8 @@ val baseSettings = Seq(
     name = "Li Haoyi",
     url = url("https://github.com/lihaoyi")
   ),
-  publishTo := Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+  publishTo := Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
+  resolvers += "Sonatype staging" at "https://oss.sonatype.org/content/repositories/staging"
 )
 lazy val noPublish = Seq(
   publishArtifact := false,
@@ -62,7 +63,13 @@ lazy val sourcecode = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     osgiSettings,
     exportPackage := Seq("sourcecode.*"),
     privatePackage := Seq(),
-    dynamicImportPackage := Seq("*")
+    dynamicImportPackage := Seq("*"),
+    credentials ++= {
+      lazy val credentials = sys.props("credentials")
+      val credentialsFile = if (credentials != null) new File(credentials) else null
+      if (credentialsFile != null) List(new FileCredentials(credentialsFile))
+      else Nil
+    }
   )
   .enablePlugins(SbtOsgi)
   .jsSettings(
